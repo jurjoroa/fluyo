@@ -151,7 +151,7 @@
       <div id="noSel" class="hint">Nada seleccionado.<br><br>
         • Forma del menú izquierdo → clic en el lienzo.<br>
         • <kbd>Rueda ratón</kbd> mover · <kbd>Ctrl+Rueda</kbd> zoom.<br>
-        • <kbd>Clic derecho</kbd>, <kbd>Clic central</kbd> o <kbd>Alt+Arrastrar</kbd> para pan.<br>
+        • <kbd>Clic derecho</kbd>, <kbd>Clic central</kbd> <span data-es-or>o</span> <kbd>Alt+Arrastrar</kbd> para pan.<br>
         • Táctil: <b>un dedo</b> mueve el plano, <b>dos dedos</b> hacen zoom, doble toque edita.<br>
         • Pasa el mouse sobre un nodo (o selecciónalo) y <b>arrastra una flecha azul</b> para conectar.<br>
         • <b>Arrastra en el vacío</b> para seleccionar varios; <kbd>Shift</kbd>+clic suma o quita.<br>
@@ -449,5 +449,8 @@
 <script src="js/interaction.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/export.js"></script>
+<!-- English layer: translates the UI at boot without touching upstream markup.
+     ?lang=es for Spanish. See js/i18n.js -->
+<script src="js/i18n.js"></script>
 </body>
 </html>

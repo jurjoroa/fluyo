@@ -629,7 +629,7 @@ function render(c,t,opts={}){
   if(P().nodes.length===0 && !presenting){
     c.fillStyle=theme==="crema"?"#00000055":"#ffffff44";
     c.font=(20/viewZoom)+"px Georgia, serif"; c.textAlign="center";
-    c.fillText("Elige una forma o icono a la izquierda y haz clic aquí — o pulsa «Ejemplo»", (cv.width/2 - viewX) / viewZoom, (cv.height/2 - viewY) / viewZoom);
+    c.fillText(((window.fluyoT && fluyoT("Elige una forma o icono a la izquierda y haz clic aquí — o pulsa «Ejemplo»")) || "Elige una forma o icono a la izquierda y haz clic aquí — o pulsa «Ejemplo»"), (cv.width/2 - viewX) / viewZoom, (cv.height/2 - viewY) / viewZoom);
   }
 
   c.restore();
