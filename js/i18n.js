@@ -27,7 +27,7 @@
     'Exportar': 'Export', 'Reanudar': 'Resume',
 
     // ── left toolbar
-    'Mover': 'Select', 'Flecha': 'Arrow', 'Caja': 'Box', 'BD': 'DB', 'Rombo': 'Diamond',
+    'Mover': 'Select', 'Hand': 'Hand', 'Flecha': 'Arrow', 'Caja': 'Box', 'BD': 'DB', 'Rombo': 'Diamond',
     'Círculo': 'Circle', 'Hex': 'Hex', 'Texto': 'Text', 'Código': 'Code',
     'Iconos': 'Icons', 'Imagen': 'Image', 'GIFs': 'GIFs',
 
