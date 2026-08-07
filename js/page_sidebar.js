@@ -123,7 +123,11 @@
       #pageSide .grp.open{color:#f0883e}
       #pageSide .grp .car{width:11px;flex:0 0 11px;font-size:10px;opacity:.75}
       #pageSide .grp .n{margin-left:auto;font-weight:400;font-size:12px;opacity:.55}
-      #pageSide a.sub{padding-left:31px}
+      /* Sub-tabs are indented past the main tab's caret and carry a hairline rail, so the
+         hierarchy is visible at a glance instead of inferred from the bold weight alone. */
+      #pageSide a.sub{padding-left:30px;margin-left:14px;
+        border-left:1px solid var(--line)}
+      #pageSide a.sub.on{border-left-color:#f0883e}
       #pageSide a{display:block;padding:7px 14px;font-size:15px;color:#d8dae0;text-decoration:none;
         cursor:pointer;border-left:2px solid transparent;overflow:hidden}
       #pageSide a .nm{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
