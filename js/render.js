@@ -291,9 +291,11 @@ function drawNode(c,n,t,theme,isExport){
      * one, how many, and what it does. */
     if(n.iconSvg){
       const im=getImg(iconURLFor(null, n.color, n.iconSvg));
-      const s=Math.min(30, n.h*0.42);
+      /* Sized to the box and vertically centred, not pinned small in a corner: on a slim chip a
+       * corner badge reads as dirt, while a centred one reads as the control's own mark. */
+      const s=Math.min(34, n.h*0.55);
       if(im.complete && im.naturalWidth)
-        c.drawImage(im, n.x-n.w/2+12, n.y-n.h/2+10, s, s);
+        c.drawImage(im, n.x-n.w/2+12, n.y-s/2, s, s);
     }
     drawLabelLines(c,n,theme);
   }
