@@ -46,6 +46,17 @@
     // The app's shell is `rail | stage`; this makes it `rail | pages | stage`, so the tool rail
     // stays first and the page list sits beside it the way an app puts navigation beside its
     // toolbar. Fixed positioning at left:0 simply covered the rail.
+    // ALL of build()'s mutable state is declared here, before anything can reach it.
+    //
+    // This file crashed three times on the same class of bug: a helper called during setup
+    // touched a `let`/`const` declared further down and hit its temporal dead zone, which threw
+    // out of build() and left the sidebar either absent or — the last time — present but empty,
+    // with the error in a console nobody had open. Hoisting the state makes that impossible
+    // rather than making it unlikely.
+    let shown = -1;
+    let toggle = null;
+    let pos = localStorage.getItem('fluyo.pagesPos') || 'left';
+
     const rail = document.querySelector('.rail');
     const stage = document.querySelector('.stage');
     const side = document.createElement('nav');
@@ -56,7 +67,6 @@
      * left next to the tools. Persisted, because having to re-choose it every reload is worse
      * than not offering the choice. */
     const KEY = 'fluyo.pagesPos';
-    let pos = localStorage.getItem(KEY) || 'left';
 
     function place(next) {
       pos = next;
@@ -119,9 +129,7 @@
       #pageSide a{color:var(--text,#d8dae0)}
       body.light #pageSideT,body.cream #pageSideT{background:rgba(255,255,255,.95);color:#20242b}`;
     document.head.appendChild(style);
-    place(pos);              // honour the saved preference on load, not just on click
-
-    const toggle = document.createElement('button');
+    toggle = document.createElement('button');
     toggle.id = 'pageSideT';
     toggle.title = 'Show / hide the page list';
     toggle.textContent = '‹';
@@ -136,12 +144,18 @@
       toggle.textContent = hid ? '›' : '‹';
     };
     function syncToggle() {
+      if (!toggle) return;                      // place() may run before the button is built
       toggle.textContent = pos === 'bottom' ? '☰' : (side.classList.contains('hid') ? '›' : '‹');
       toggle.title = pos === 'bottom' ? 'Bring the page list back to the side'
                                       : 'Show / hide the page list';
     }
 
-    let shown = -1;
+    // AFTER the toggle exists. Called before it, place() -> syncToggle() touched `toggle` while
+    // it was still in the temporal dead zone of its own `const`, which threw a ReferenceError and
+    // killed build() outright — the sidebar simply never appeared, with the failure buried in a
+    // console nobody was watching.
+    place(pos);
+
     function paint() {
       // Rebuild only when the selection or the page set changes — this runs on every frame.
       const sig = doc.cur + '|' + doc.pages.length + '|' + doc.pages.map(p => p.name).join('');
