@@ -6,8 +6,9 @@
  * need to move around. Every canvas editor has a hand; this adds it.
  *
  * HOW IT STAYS OUT OF UPSTREAM'S WAY
- * A separate file. The rail already binds any button carrying `data-mode`, so the tool registers
- * itself by injecting one — `setMode('hand')` and the toggled state come free.
+ * A separate file that injects its button into the zoom bar. It sits WITH the zoom controls
+ * rather than in the shape rail: panning and zooming are the same job — moving the viewport —
+ * and the rail is for making things.
  *
  * The drag itself is handled in the CAPTURE phase and stops propagation, so upstream's pointerdown
  * (which would start a selection marquee) never runs. That is why this needs no edit to
@@ -25,22 +26,35 @@
     'a1.6 1.6 0 0 1 2.6-1.8L8 14"/></svg>';
 
   function build() {
-    const rail = document.querySelector('.rail');
+    const bar = document.getElementById('zoomCtl');
     const cv = document.getElementById('cv');
-    if (!rail || !cv || rail.querySelector('[data-mode="hand"]')) return;
+    if (!bar || !cv || bar.querySelector('.zc-hand')) return;
 
+    // The hand lives WITH the zoom controls, not in the shape rail. Panning and zooming are the
+    // same job — moving the viewport — and the rail is for making things. Grouping them puts
+    // every navigation control under one thumb.
     const btn = document.createElement('button');
-    btn.dataset.mode = 'hand';
+    btn.className = 'zc-hand';
     btn.title = 'Hand — drag to pan (H)';
-    btn.innerHTML = HAND_SVG + 'Hand';
-    // Directly after Select, where every other editor puts it.
-    const sel = rail.querySelector('[data-mode="select"]');
-    sel ? sel.after(btn) : rail.prepend(btn);
+    btn.innerHTML = HAND_SVG;
+    bar.prepend(btn);
 
-    // Upstream binds rail clicks ONCE at load, over the buttons that existed then — an injected
-    // button gets no handler and silently does nothing when clicked. Bind it here.
+    const style = document.createElement('style');
+    style.textContent = `
+      #zoomCtl .zc-hand{width:34px;height:30px;display:grid;place-items:center;
+        border-right:1px solid rgba(255,255,255,.12)}
+      #zoomCtl .zc-hand svg{width:16px;height:16px;fill:none;stroke:currentColor;
+        stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+      #zoomCtl .zc-hand.on{background:#f0883e;color:#1a1207}
+      #zoomCtl .zc-hand.on:hover{background:#f0883e}
+      body.light #zoomCtl .zc-hand, body.cream #zoomCtl .zc-hand{
+        border-right-color:rgba(0,0,0,.12)}`;
+    document.head.appendChild(style);
+
+    // Toggle rather than one-way: clicking the active hand returns you to select, which is what
+    // a single navigation button in a toolbar is expected to do.
     btn.addEventListener('click', () => {
-      if (typeof setMode === 'function') setMode('hand');
+      if (typeof setMode === 'function') setMode(mode === 'hand' ? 'select' : 'hand');
     });
 
     let drag = null;
@@ -48,10 +62,33 @@
     // The cursor is set INLINE, not by a CSS class: interaction.js:300 writes `cv.style.cursor`
     // on hover, and an inline style beats any stylesheet rule — so a class-based grab cursor
     // flickers back to default the moment the pointer moves.
-    let last = null;
+    let last = false;   // NOT null — see below
     (function watch() {
       const on = (typeof mode !== 'undefined' && mode === 'hand');
-      if (on !== last) { last = on; document.body.classList.toggle('hand-mode', on); }
+      if (on !== last) {
+        last = on;
+        document.body.classList.toggle('hand-mode', on);
+        btn.classList.toggle('on', on);
+        // `hand` is a mode upstream does not know, so nothing in the rail should look active
+        // while it is on; upstream owns the state again the moment it is off.
+        //
+        // `last` starts FALSE rather than null on purpose. With null, the very first frame reads
+        // as a hand->select transition and calls syncRail() while the app is still initialising,
+        // which left Arrow and Image highlighted at load — a bug this file caused and briefly
+        // mistook for upstream's.
+        if (on) {
+          document.querySelectorAll('.rail button.toggled')
+                  .forEach(x => x.classList.remove('toggled'));
+        } else if (typeof syncRail === 'function') {
+          syncRail();
+        }
+      }
+      // The rail can be re-highlighted after the fact (a drawer opening calls syncRail again),
+      // so keep it clear for as long as the hand is the active tool, not just on the transition.
+      if (on) {
+        const stale = document.querySelector('.rail button.toggled');
+        if (stale) stale.classList.remove('toggled');
+      }
       if (on) cv.style.cursor = drag ? 'grabbing' : 'grab';
       requestAnimationFrame(watch);
     })();
