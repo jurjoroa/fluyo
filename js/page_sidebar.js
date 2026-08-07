@@ -124,9 +124,12 @@
       #pageSide .grp .car{width:11px;flex:0 0 11px;font-size:10px;opacity:.75}
       #pageSide .grp .n{margin-left:auto;font-weight:400;font-size:12px;opacity:.55}
       #pageSide a.sub{padding-left:31px}
-      #pageSide a{display:block;padding:8px 14px;font-size:15px;color:#d8dae0;text-decoration:none;
-        cursor:pointer;border-left:2px solid transparent;white-space:nowrap;overflow:hidden;
-        text-overflow:ellipsis}
+      #pageSide a{display:block;padding:7px 14px;font-size:15px;color:#d8dae0;text-decoration:none;
+        cursor:pointer;border-left:2px solid transparent;overflow:hidden}
+      #pageSide a .nm{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      #pageSide a .mt{display:block;font-size:12px;opacity:.55;white-space:nowrap;
+        overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+      #pageSide a.on .mt{opacity:.8}
       #pageSide a:hover{background:rgba(255,255,255,.06)}
       #pageSide a.on{background:rgba(240,136,62,.16);border-left-color:#f0883e;color:#fff}
       #pageSideT{position:fixed;left:${WIDTH + 64}px;top:12px;z-index:36;width:26px;height:26px;
@@ -227,9 +230,21 @@
         if (!isOpen && heading) continue;
         for (const { pg, i } of entries) {
           const a = document.createElement('a');
-          a.textContent = pg.name;
-          a.title = pg.name;
           a.className = (i === doc.cur ? 'on' : '') + (heading ? ' sub' : '');
+          const nm = document.createElement('span');
+          nm.className = 'nm';
+          nm.textContent = pg.name;
+          a.appendChild(nm);
+          // `page.meta` is what the page CONTAINS — routes, services, tables, steps — so a
+          // sub-tab answers "is this the one I want" without being opened. Optional: a document
+          // that never sets it renders exactly as before.
+          if (pg.meta) {
+            const m = document.createElement('span');
+            m.className = 'mt';
+            m.textContent = pg.meta;
+            a.appendChild(m);
+          }
+          a.title = pg.meta ? pg.name + ' — ' + pg.meta : pg.name;
           a.onclick = () => {
             doc.cur = i;
             if (typeof clearSel === 'function') clearSel();
