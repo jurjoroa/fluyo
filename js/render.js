@@ -284,6 +284,17 @@ function drawNode(c,n,t,theme,isExport){
     if(fc){ c.fillStyle=fc; c.fill(); }
     borderDash(n,c); c.stroke(); c.setLineDash([]);
     c.shadowBlur=0;
+    /* A BADGE, not a replacement. `shape:"icon"` draws the glyph INSTEAD of the box, which turns
+     * a row of labelled boxes into floating text with pictures — tidier-looking and far less
+     * readable. A rect that also carries `iconSvg` keeps its container and gets the glyph in the
+     * top-left corner, so the kind is recognisable at a glance and the label still says which
+     * one, how many, and what it does. */
+    if(n.iconSvg){
+      const im=getImg(iconURLFor(null, n.color, n.iconSvg));
+      const s=Math.min(30, n.h*0.42);
+      if(im.complete && im.naturalWidth)
+        c.drawImage(im, n.x-n.w/2+12, n.y-n.h/2+10, s, s);
+    }
     drawLabelLines(c,n,theme);
   }
   c.restore();
