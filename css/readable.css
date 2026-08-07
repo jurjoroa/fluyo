@@ -1,0 +1,31 @@
+/* readable.css — a larger type scale for the side panels.
+ *
+ * WHY
+ * The panels sit at 11–12px, which is fine as a dense inspector for someone who uses the tool
+ * every day and unreadable for everyone else. A diagram meant to be understood by people who did
+ * not draw it — engineers arriving at a codebase, an agent's human reviewer — is read in the
+ * panels as much as on the canvas.
+ *
+ * WHY A SEPARATE FILE
+ * These are overrides of upstream's own rules. Kept apart from styles.css so a merge from
+ * itsnect/fluyo never conflicts on a font-size, and so the whole change can be dropped by
+ * removing one <link>.
+ */
+
+/* Section headings in the inspector and the drawers. */
+aside h3,
+#iconDrawer h4,
+#animDrawer h4        { font-size: 12.5px; letter-spacing: .8px; }
+
+/* Field labels — the text you actually read to know what a control does. */
+.row label            { font-size: 13.5px; }
+.pickLbl              { font-size: 13px; }
+
+/* Small buttons and helper text. */
+button.mini           { font-size: 12.5px; padding: 5px 9px; }
+.hint                 { font-size: 12.5px; line-height: 1.55; }
+
+/* Inputs: matching the labels stops the panel reading as two different documents. */
+aside input,
+aside select,
+aside textarea        { font-size: 13.5px; }

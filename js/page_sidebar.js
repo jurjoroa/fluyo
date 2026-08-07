@@ -20,7 +20,7 @@
 (function () {
   'use strict';
 
-  const WIDTH = 232;
+  const WIDTH = 250;   // a touch wider: page names are long and 15px type needs the room
 
   function groupsOf(pages) {
     const out = new Map();
@@ -56,6 +56,10 @@
     let shown = -1;
     let toggle = null;
     let pos = localStorage.getItem('fluyo.pagesPos') || 'left';
+    // Which MAIN tab is expanded. One at a time, like the app's own navigation: a flat list of
+    // thirty-seven links is a list, not navigation — you read all of it to find one thing. The
+    // group holding the current page opens itself, so the sidebar always shows where you are.
+    let openGroup = localStorage.getItem('fluyo.pagesGroup');
 
     const rail = document.querySelector('.rail');
     const stage = document.querySelector('.stage');
@@ -99,22 +103,28 @@
     style.textContent = `
       #pageSide{flex:0 0 ${WIDTH}px;width:${WIDTH}px;overflow-y:auto;
         background:var(--panel);border-right:1px solid var(--line)
-        font:13px/1.35 -apple-system,BlinkMacSystemFont,sans-serif;padding:8px 0 24px}
+        font:15px/1.4 -apple-system,BlinkMacSystemFont,sans-serif;padding:8px 0 24px}
       #pageSide.hid{display:none}
       body.pagesRight #pageSide{border-right:0;border-left:1px solid var(--line)}
       #pageSide .pos{display:flex;gap:3px;padding:2px 10px 8px;
         border-bottom:1px solid var(--line);margin-bottom:4px}
-      #pageSide .pos button{flex:1;height:24px;border:0;border-radius:5px;cursor:pointer;
-        background:rgba(127,127,127,.12);color:inherit;font-size:13px;line-height:24px;padding:0}
+      #pageSide .pos button{flex:1;height:28px;border:0;border-radius:5px;cursor:pointer;
+        background:rgba(127,127,127,.12);color:inherit;font-size:15px;line-height:28px;padding:0}
       #pageSide .pos button:hover{background:rgba(127,127,127,.24)}
       #pageSide .pos button.on{background:#f0883e;color:#1a1207}
       /* The page list moves; it does not appear twice. The footer bar is upstream's and stays in
          the DOM so renderTabs() keeps working — it is only hidden. */
       body.hasSide #pagesBar{display:none}
 
-      #pageSide h4{margin:12px 14px 5px;font-size:10.5px;letter-spacing:.09em;
-        text-transform:uppercase;color:#8b8f98;font-weight:600}
-      #pageSide a{display:block;padding:6px 14px;color:#d8dae0;text-decoration:none;
+      #pageSide .grp{display:flex;align-items:center;gap:7px;width:100%;border:0;
+        background:none;cursor:pointer;padding:9px 13px;color:var(--text,#d8dae0);
+        font:600 14px/1.2 inherit;text-align:left}
+      #pageSide .grp:hover{background:rgba(127,127,127,.12)}
+      #pageSide .grp.open{color:#f0883e}
+      #pageSide .grp .car{width:11px;flex:0 0 11px;font-size:10px;opacity:.75}
+      #pageSide .grp .n{margin-left:auto;font-weight:400;font-size:12px;opacity:.55}
+      #pageSide a.sub{padding-left:31px}
+      #pageSide a{display:block;padding:8px 14px;font-size:15px;color:#d8dae0;text-decoration:none;
         cursor:pointer;border-left:2px solid transparent;white-space:nowrap;overflow:hidden;
         text-overflow:ellipsis}
       #pageSide a:hover{background:rgba(255,255,255,.06)}
@@ -176,17 +186,50 @@
         bar.appendChild(b);
       }
       side.appendChild(bar);
-      for (const [heading, entries] of groupsOf(doc.pages)) {
+      const groups = groupsOf(doc.pages);
+      // The group containing the current page always wins: navigating by any other route (the
+      // footer, a node link, a keyboard shortcut) must still leave the sidebar showing where you
+      // are, or it is lying about the state.
+      let here = null;
+      for (const [heading, entries] of groups)
+        if (entries.some(e => e.i === doc.cur)) here = heading;
+      const shownGroup = here || openGroup || [...groups.keys()][0];
+
+      for (const [heading, entries] of groups) {
+        const isOpen = heading === shownGroup;
         if (heading) {
-          const h = document.createElement('h4');
-          h.textContent = heading;
+          const h = document.createElement('button');
+          h.className = 'grp' + (isOpen ? ' open' : '');
+          const caret = document.createElement('span');
+          caret.className = 'car';
+          caret.textContent = isOpen ? '▾' : '▸';
+          const label = document.createElement('span');
+          label.textContent = heading;
+          const count = document.createElement('span');
+          count.className = 'n';
+          count.textContent = entries.length;
+          h.append(caret, label, count);
+          h.onclick = () => {
+            openGroup = isOpen ? '' : heading;
+            localStorage.setItem('fluyo.pagesGroup', openGroup);
+            // If a group is collapsed while its page is showing, the current page would vanish
+            // from the sidebar. Move to the first page of whatever the user just opened instead.
+            if (!isOpen && entries.length) {
+              doc.cur = entries[0].i;
+              if (typeof clearSel === 'function') clearSel();
+              if (typeof renderTabs === 'function') renderTabs();
+              if (typeof fitView === 'function') fitView();
+            }
+            shown = -1;
+          };
           side.appendChild(h);
         }
+        if (!isOpen && heading) continue;
         for (const { pg, i } of entries) {
           const a = document.createElement('a');
           a.textContent = pg.name;
           a.title = pg.name;
-          if (i === doc.cur) a.className = 'on';
+          a.className = (i === doc.cur ? 'on' : '') + (heading ? ' sub' : '');
           a.onclick = () => {
             doc.cur = i;
             if (typeof clearSel === 'function') clearSel();
