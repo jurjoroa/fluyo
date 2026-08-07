@@ -28,6 +28,7 @@
 /* Lista blanca. Añadir un ejemplo = un archivo en ejemplos/data/ y una línea
    aquí. El texto es el que se usa como nombre visible del diagrama. */
 const EXAMPLES = {
+  "spillit": "Spillit — architecture",
   "kafka-event-pipeline":        "Pipeline de eventos con Apache Kafka",
   "microservicios-api-gateway":  "Arquitectura de microservicios con API Gateway",
   "oauth2-flujo-autenticacion":  "Flujo de autenticación OAuth 2.0",
