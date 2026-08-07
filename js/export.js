@@ -288,7 +288,7 @@ function renderNodeToSVG(n, theme, syms){
       break;
     }
     case "icon":{
-      const src=iconURLFor(n.icon, nodeIconTint(n));
+      const src=iconURLFor(n.icon, nodeIconTint(n), n.iconSvg);
       const s=Math.min(n.w,n.h-26)*.78;
       parts.push(syms.use(src, n.x-s/2, n.y-n.h/2+4, s));
       parts.push(svgLabelLines(n,theme));

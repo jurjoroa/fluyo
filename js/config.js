@@ -252,7 +252,23 @@ function iconSVGFor(key, tint){
   const d=ICONS[key]; if(!d) return "";
   return tint? badge(tint, d.inner) : d.svg;
 }
-function iconURLFor(key, tint){
+/* A node may carry its OWN glyph in `iconSvg` (raw <path>/<circle>… markup on a 24x24 grid).
+ *
+ * WHY: the 80 icons here are cloud/infra glyphs. A diagram OF an application wants that
+ * application's own icons — the ones the user already recognises from its sidebar — and no
+ * mapping onto this set can be faithful, only "close". A node's own SVG is exact.
+ *
+ * Same pill treatment as a built-in so a custom glyph does not look pasted on: the inner markup
+ * is stroked in the tint (or white) and centred on the standard 24x24 viewBox. */
+function inlineIconURL(svg, tint){
+  const stroke=tint||"#fff";
+  const wrapped='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" '
+    +'fill="none" stroke="'+stroke+'" stroke-width="1.8" stroke-linecap="round" '
+    +'stroke-linejoin="round">'+svg+'</svg>';
+  return "data:image/svg+xml;utf8,"+encodeURIComponent(wrapped);
+}
+function iconURLFor(key, tint, svg){
+  if(svg) return inlineIconURL(svg, tint);
   if(!tint) return iconURL[key]||"";
   const ck=key+"|"+tint;
   if(!tintedURL[ck]) tintedURL[ck]="data:image/svg+xml;utf8,"+encodeURIComponent(iconSVGFor(key,tint));
