@@ -226,8 +226,55 @@ function orthoRoute(p1,d1,p2,d2,off){
   }
   return out;
 }
+/* Self-loop: an edge whose ends are the SAME node.
+ *
+ * WHY THIS EXISTS
+ * A node that feeds itself is ordinary in a real flow — a retry, a debounce that waits and
+ * repeats, a poller, a watcher. Upstream had no case for it: both anchors resolve on one box, so
+ * `orthoRoute` returned a degenerate zig-zag straight THROUGH the node (measured: five points all
+ * on x=100, crossing the box twice). It read as a stray line, not a loop, so the only way to draw
+ * a cycle was a dummy neighbour node — which says "two things" where the truth is "one thing that
+ * repeats".
+ *
+ * The path leaves `fromSide`, runs out by LOOP_OUT, around, and re-enters on `toSide`. Same-side
+ * loops get a simple bump; adjacent sides turn the corner. Points only — the renderer and the
+ * animation both consume this, so a self-loop animates exactly like any other edge, which is the
+ * whole point: the dot travelling round a cycle is what makes it read as a cycle.
+ */
+const LOOP_OUT=46;
+function selfLoopPoints(A,s1,s2){
+  const hw=A.w/2, hh=A.h/2, cx=A.x, cy=A.y;
+  /* anchor on a side, then the point pushed out from it */
+  const at={n:{x:cx,y:cy-hh}, s:{x:cx,y:cy+hh}, e:{x:cx+hw,y:cy}, w:{x:cx-hw,y:cy}};
+  const out={n:{x:0,y:-LOOP_OUT}, s:{x:0,y:LOOP_OUT}, e:{x:LOOP_OUT,y:0}, w:{x:-LOOP_OUT,y:0}};
+  const a=at[s1]||at.s, b=at[s2]||at.n;
+  const oa=out[s1]||out.s, ob=out[s2]||out.n;
+  const p1={x:a.x+oa.x, y:a.y+oa.y};
+  const p2={x:b.x+ob.x, y:b.y+ob.y};
+  if(s1===s2){
+    /* same side: a flat bump that clears the edge, offset along the box so it is visible */
+    const along=(s1==="n"||s1==="s")? {x:hw*0.55,y:0} : {x:0,y:hh*0.55};
+    return [a,{x:p1.x-along.x,y:p1.y-along.y},{x:p1.x+along.x,y:p1.y+along.y},b];
+  }
+  const opposite={n:"s",s:"n",e:"w",w:"e"};
+  if(opposite[s1]===s2){
+    /* OPPOSITE sides must route AROUND a flank. Going out one side and straight to the other
+     * draws a segment right through the middle of the box — which looks like the node has been
+     * struck through, not like it loops. Verified by segment-vs-box intersection, not by
+     * checking whether the corner POINTS happen to sit outside (they do, and it still crosses). */
+    const vert=(s1==="n"||s1==="s");
+    const flank=vert? cx+hw+LOOP_OUT : cy+hh+LOOP_OUT;
+    return vert
+      ? [a,p1,{x:flank,y:p1.y},{x:flank,y:p2.y},p2,b]
+      : [a,p1,{x:p1.x,y:flank},{x:p2.x,y:flank},p2,b];
+  }
+  /* adjacent sides: out, turn the corner, back in */
+  return [a,p1,{x:(s1==="n"||s1==="s")?p2.x:p1.x,y:(s1==="n"||s1==="s")?p1.y:p2.y},p2,b]
+    .filter((p,i,arr)=>i===0||Math.hypot(p.x-arr[i-1].x,p.y-arr[i-1].y)>1);
+}
 function edgePoints(e){
   const A=nodeById(e.from), B=nodeById(e.to); if(!A||!B) return [];
+  if(e.from===e.to) return selfLoopPoints(A, e.fromSide||"s", e.toSide||"n");
   const wps=e.waypoints||[];
   const tA=wps[0]||{x:B.x,y:B.y}, tB=wps[wps.length-1]||{x:A.x,y:A.y};
   let p1=anchorPt(A,e.fromSide,tA.x,tA.y);
