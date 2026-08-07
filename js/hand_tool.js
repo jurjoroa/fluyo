@@ -66,10 +66,16 @@
       cv.setPointerCapture && cv.setPointerCapture(ev.pointerId);
     }, true);
 
-    cv.addEventListener('pointermove', ev => {
+    // move/up live on WINDOW, not on the canvas.
+    //
+    // Bound to the canvas they only fire while the pointer is over it, so the pan died the moment
+    // you crossed onto the rail or the side panel — which is exactly when you need it most, since
+    // at high zoom you drag a long way to travel a short distance. setPointerCapture is supposed
+    // to prevent that and does in Chromium, but relying on it is the bug: window listeners work
+    // whether or not capture is honoured.
+    addEventListener('pointermove', ev => {
       if (!drag) return;
       ev.preventDefault();
-      ev.stopPropagation();
       viewX = drag.ox + (ev.clientX - drag.x);
       viewY = drag.oy + (ev.clientY - drag.y);
     }, true);
@@ -82,8 +88,8 @@
         try { cv.releasePointerCapture(ev.pointerId); } catch (e) {}
       }
     };
-    cv.addEventListener('pointerup', end, true);
-    cv.addEventListener('pointercancel', end, true);
+    addEventListener('pointerup', end, true);
+    addEventListener('pointercancel', end, true);
     addEventListener('blur', () => end());
 
     addEventListener('keydown', ev => {
