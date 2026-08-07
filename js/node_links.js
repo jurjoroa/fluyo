@@ -22,7 +22,8 @@
 
   function pageIndex(target) {
     if (typeof target === 'number') return target;
-    const pages = (window.doc && doc.pages) || [];
+    // `doc` is a top-level `let` in a classic script: a global binding, NOT a window property.
+    const pages = (typeof doc !== 'undefined' && doc.pages) || [];
     return pages.findIndex(p => p.name === target);
   }
 
@@ -34,7 +35,7 @@
   }
 
   function linkedNodeAt(p) {
-    const page = (window.doc && doc.pages && doc.pages[doc.cur]) || null;
+    const page = (typeof doc !== 'undefined' && doc.pages && doc.pages[doc.cur]) || null;
     if (!page) return null;
     // Topmost first: later nodes render over earlier ones, so they win the hit.
     for (let i = page.nodes.length - 1; i >= 0; i--) {

@@ -17,6 +17,7 @@ not say something true without it.
 | `js/hand_tool.js` | hand/pan tool in the zoom bar | panning was middle-click or Alt+drag only |
 | `js/geometry.js` | **self-loop routing** | a node that feeds itself had no path |
 | `js/config.js` + `render.js` + `export.js` | **`node.iconSvg`** | a diagram of an app wants that app's own icons |
+| `js/quick_find.js` | **`/` quick-find** — type, land on any tagged node, selected + centred | 30+ pages and ~700 elements; browsing is not searching. Jumps via `window.fluyoTag` (tag_link.js owns the jump) |
 
 ## Self-loops (`selfLoopPoints`, geometry.js)
 
